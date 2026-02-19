@@ -1,0 +1,25 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@namespace ElsaServerAndStudio.Host.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elsa Workflows</title>
+    <base href="/" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="_content/Elsa.Studio.Shell/css/shell.css" rel="stylesheet" />
+    <link href="Host.styles.css" rel="stylesheet" />
+</head>
+<body>
+    <component type="typeof(Client.App)" render-mode="WebAssemblyPrerendered" />
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>
