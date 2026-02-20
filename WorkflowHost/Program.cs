@@ -94,6 +94,7 @@ if (app.Environment.IsDevelopment()) // Use Swagger in development environment.
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Workflow API v1");
         c.RoutePrefix = "swagger";
     });
+    app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 app.UseAuthentication();
 app.UseAuthorization();
