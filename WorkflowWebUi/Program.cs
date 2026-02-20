@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 // Build the host.
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-//var configuration = builder.Configuration;
+var configuration = builder.Configuration;
 
 // Register root components.
 builder.RootComponents.Add<App>("#app");
@@ -36,7 +36,6 @@ builder.Services.AddLoginModule();
 builder.Services.UseElsaIdentity();
 builder.Services.AddDashboardModule();
 builder.Services.AddWorkflowsModule();
-
 
 // Build the application.
 var app = builder.Build();
