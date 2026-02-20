@@ -58,18 +58,47 @@ builder.Services.AddCors(cors => cors
         .AllowAnyMethod()
         .WithExposedHeaders("x-elsa-workflow-instance-id"))); //TODO: Required for Elsa Studio in order to support running workflows from the designer. Alternatively, you can use the `*` wildcard to expose all headers.
 
+// Add Swagger/Swashbuckle.
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type =>
+    {
+        // For nested types, include parent class name to avoid conflicts
+        var fullName = type.FullName ?? type.Name;
+
+        // Replace + with . for nested types and remove special characters
+        return fullName.Replace("+", ".").Replace("`", "");
+    });
+});
+
 // Add Health Checks.
 builder.Services.AddHealthChecks();
 
 // Build the web application.
 var app = builder.Build();
 
+
+
+
 // Configure web application's middleware pipeline.
 app.UseCors();
 app.UseRouting(); // Required for SignalR.
+if (app.Environment.IsDevelopment()) // Use Swagger in development environment.
+{
+    app.UseSwagger(c =>
+    {
+        c.RouteTemplate = "swagger/{documentName}/swagger.json";
+    });
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Workflow API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseWorkflowsApi(); // Use Elsa API endpoints.
 app.UseWorkflows(); // Use Elsa middleware to handle HTTP requests mapped to HTTP Endpoint activities.
 app.UseWorkflowsSignalRHubs(); // Optional SignalR integration. Elsa Studio uses SignalR to receive real-time updates from the server. 
+app.MapHealthChecks("/health"); // Verify endpoingt mapping for health checks is complete and correct.
 app.Run();
