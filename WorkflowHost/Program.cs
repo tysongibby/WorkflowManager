@@ -2,6 +2,7 @@ using Elsa.EntityFrameworkCore.Extensions;
 using Elsa.EntityFrameworkCore.Modules.Management;
 using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -58,32 +59,45 @@ builder.Services.AddCors(cors => cors
         .AllowAnyMethod()
         .WithExposedHeaders("x-elsa-workflow-instance-id"))); //TODO: Required for Elsa Studio in order to support running workflows from the designer. Alternatively, you can use the `*` wildcard to expose all headers.
 
-// Add Swagger/Swashbuckle.
-builder.Services.AddSwaggerGen(options =>
-{
-    options.CustomSchemaIds(type =>
-    {
-        // For nested types, include parent class name to avoid conflicts
-        var fullName = type.FullName ?? type.Name;
 
-        // Replace + with . for nested types and remove special characters
-        return fullName.Replace("+", ".").Replace("`", "");
-    });
-});
+// Add Swagger/Swashbuckle if it is not design-time and it is development environment.
+var isDesignTime = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")?.Contains("Design") ?? false;
+if (!isDesignTime && builder.Environment.IsDevelopment())
+{
+    try
+    {
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.CustomSchemaIds(type =>
+            {
+                // For nested types, include parent class name to avoid conflicts
+                var fullName = type.FullName ?? type.Name;
+
+                // Replace + with . for nested types and remove special characters
+                return fullName.Replace("+", ".").Replace("`", "");
+            });
+        });
+    }
+    catch
+    {
+        // If Swagger/Swashbuckle is not available, we can ignore the exception since it's only for development/design-time purposes.
+    }
+
+}
 
 // Add Health Checks.
 builder.Services.AddHealthChecks();
 
+// Add API Explorer for Swagger/Swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+
 // Build the web application.
 var app = builder.Build();
-
-
-
 
 // Configure web application's middleware pipeline.
 app.UseCors();
 app.UseRouting(); // Required for SignalR.
-if (app.Environment.IsDevelopment()) // Use Swagger in development environment.
+if (!isDesignTime && app.Environment.IsDevelopment()) // If it is not DesignTime, but it is development environment, use Swagger.
 {
     app.UseSwagger(c =>
     {
