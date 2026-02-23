@@ -8,47 +8,47 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var dbConnection = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("dbConnection is null: Database connection string cannot be null");
 
-builder.Services.AddElsa(elsa =>
+builder.Services.AddElsa(options =>
 {
     // Configure Management layer to use EF Core.
-    elsa.UseWorkflowManagement(management => management.UseEntityFrameworkCore(ef => ef.UseSqlServer(dbConnection)));
+    options.UseWorkflowManagement(management => management.UseEntityFrameworkCore(ef => ef.UseSqlServer(dbConnection)));
 
     // Configure Runtime layer to use EF Core.
-    elsa.UseWorkflowRuntime(runtime => runtime.UseEntityFrameworkCore(ef => ef.UseSqlServer(dbConnection)));
+    options.UseWorkflowRuntime(runtime => runtime.UseEntityFrameworkCore(ef => ef.UseSqlServer(dbConnection)));
 
     // Default Identity features for authentication/authorization.
-    elsa.UseIdentity(identity =>
+    options.UseIdentity(identity =>
     {
         identity.TokenOptions = options => options.SigningKey = "sufficiently-large-secret-signing-key"; // TODO: ADD 256 bit signing key.
         identity.UseAdminUserProvider();
     });
 
     // Configure ASP.NET authentication/authorization.
-    elsa.UseDefaultAuthentication(auth => auth.UseAdminApiKey());
+    options.UseDefaultAuthentication(auth => auth.UseAdminApiKey());
 
     // Expose Elsa API endpoints.
-    elsa.UseWorkflowsApi();
+    options.UseWorkflowsApi();
 
     // Setup a SignalR hub for real-time updates from the server.
-    elsa.UseRealTimeWorkflows();
+    options.UseRealTimeWorkflows();
 
     // Enable C# workflow expressions
-    elsa.UseCSharp();
+    options.UseCSharp();
 
     // Enable JavaScript workflow expressions
-    elsa.UseJavaScript(options => options.AllowClrAccess = true);
+    options.UseJavaScript(options => options.AllowClrAccess = true);
 
     // Enable HTTP activities.
-    elsa.UseHttp(options => options.ConfigureHttpOptions = httpOptions => httpOptions.BaseUrl = new("https://localhost:5001"));
+    options.UseHttp(options => options.ConfigureHttpOptions = httpOptions => httpOptions.BaseUrl = new("https://localhost:5001"));
 
     // Use timer activities.
-    elsa.UseScheduling();
+    options.UseScheduling();
 
     // Register custom activities from the application, if any.
-    elsa.AddActivitiesFrom<Program>();
+    options.AddActivitiesFrom<Program>();
 
     // Register custom workflows from the application, if any.
-    elsa.AddWorkflowsFrom<Program>();
+    options.AddWorkflowsFrom<Program>();
 });
 
 // Configure CORS to allow designer app hosted on a different origin to invoke the APIs.
