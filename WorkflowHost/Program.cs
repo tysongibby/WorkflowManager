@@ -3,10 +3,13 @@ using Elsa.EntityFrameworkCore.Modules.Management;
 using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Parlot.Fluent;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var dbConnection = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("dbConnection is null: Database connection string cannot be null");
+var signingKey = configuration["Identity:SigningKey"] ?? throw new ArgumentNullException("signingKey is null: Token signing key cannot be null");
+var apiBaseUrl = configuration["Api:BaseUrl"] ?? throw new ArgumentNullException("apiBaseUrl is null: API base URL cannot be null");
 
 builder.Services.AddElsa(options =>
 {
@@ -19,7 +22,7 @@ builder.Services.AddElsa(options =>
     // Default Identity features for authentication/authorization.
     options.UseIdentity(identity =>
     {
-        identity.TokenOptions = options => options.SigningKey = "sufficiently-large-secret-signing-key"; // TODO: ADD 256 bit signing key.
+        identity.TokenOptions = options => options.SigningKey = signingKey; // TODO: ADD 256 bit signing key.
         identity.UseAdminUserProvider();
     });
 
@@ -36,10 +39,14 @@ builder.Services.AddElsa(options =>
     options.UseCSharp();
 
     // Enable JavaScript workflow expressions
-    options.UseJavaScript(options => options.AllowClrAccess = true);
+    options.UseJavaScript(options => options
+        .AllowClrAccess = true);
 
     // Enable HTTP activities.
-    options.UseHttp(options => options.ConfigureHttpOptions = httpOptions => httpOptions.BaseUrl = new("https://localhost:5001"));
+    options.UseHttp(options => options
+        .ConfigureHttpOptions = httpOptions => httpOptions
+            .BaseUrl = new(apiBaseUrl));
+
 
     // Use timer activities.
     options.UseScheduling();
