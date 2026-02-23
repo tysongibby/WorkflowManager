@@ -22,7 +22,7 @@ builder.Services.AddElsa(options =>
     // Default Identity features for authentication/authorization.
     options.UseIdentity(identity =>
     {
-        identity.TokenOptions = options => options.SigningKey = signingKey; // TODO: ADD 256 bit signing key.
+        identity.TokenOptions = options => options.SigningKey = signingKey; // TODO: Replace temp 256 bit signing key before launch.
         identity.UseAdminUserProvider();
     });
 

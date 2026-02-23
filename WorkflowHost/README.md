@@ -8,6 +8,3 @@ dotnet ef database update --context Elsa.Workflows.Runtime.Entities.RuntimeDbCon
 Try these:
 dotnet ef database update --context ManagementElsaDbContext --no-build
 dotnet ef database update --context RuntimeElsaDbContext --no-build
-
-
-As of 2/20/2026 Elsaworkflows must run on Microsoft.CodeAnalysis.Common 4.14.0
