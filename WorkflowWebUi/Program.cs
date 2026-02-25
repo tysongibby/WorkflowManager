@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Options;
 using Elsa.Studio.Models;
+using Microsoft.JSInterop;
+using System.Text.Json;
 
 
 // Build the host.
@@ -21,7 +23,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 var configuration = builder.Configuration;
 
 // Register root components.
-//builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.RootComponents.RegisterCustomElsaStudioElements();
 
@@ -44,10 +46,10 @@ builder.Services.AddWorkflowsModule();
 var app = builder.Build();
 
 // Apply client config.
-//var js = app.Services.GetRequiredService<IJSRuntime>();
-//var clientConfig = await js.InvokeAsync<JsonElement>("getClientConfig");
-//var apiUrl = builder.Configuration["Backend:Url"] ?? throw new InvalidOperationException("No API URL configured.");
-//app.Services.GetRequiredService<IOptions<BackendOptions>>().Value.Url = new(apiUrl);
+var js = app.Services.GetRequiredService<IJSRuntime>();
+var clientConfig = await js.InvokeAsync<JsonElement>("getClientConfig");
+var apiUrl = builder.Configuration["Backend:Url"] ?? throw new InvalidOperationException("No API URL configured.");
+app.Services.GetRequiredService<IOptions<BackendOptions>>().Value.Url = new(apiUrl);
 
 // Run each startup task.
 var startupTaskRunner = app.Services.GetRequiredService<IStartupTaskRunner>();

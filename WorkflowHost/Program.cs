@@ -5,7 +5,6 @@ using Elsa.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
 
-
 var builder = WebApplication.CreateBuilder(args);
 var configManager = builder.Configuration;
 var dbConnection = configManager.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("dbConnection is null: Database connection string cannot be null");
@@ -23,32 +22,46 @@ builder.Services.AddElsa(elsa =>
             .SigningKey = signingKey; // TODO: Replace temp 256 bit signing key before launch.
         identity.UseAdminUserProvider();
     }); // Setup Identity features for authentication/authorization.
+
     elsa.UseDefaultAuthentication(authentication => authentication
         .UseAdminApiKey()); // Configure ASP.NET authentication/authorization.
+
     elsa.UseWorkflowManagement(workflowManagement => 
         workflowManagement.UseEntityFrameworkCore(ef => ef
             .UseSqlServer(dbConnection))); // Configure Management layer to use EF Core.    
+
     elsa.UseWorkflowRuntime(runtime => 
         runtime.UseEntityFrameworkCore(ef => ef
             .UseSqlServer(dbConnection))); // Configure Runtime layer to use EF Core.    
+
     elsa.UseScheduling(); // Use timer activities.                             
+
     elsa.UseJavaScript(javaScript => javaScript
         .AllowClrAccess = true); // Enable JavaScript workflow expressions
+
     elsa.UseLiquid(); // Enable Liquid workflow expressions    
+
     elsa.UseCSharp(); // Enable C# workflow expressions
+
     elsa.UseHttp(http => http
         .ConfigureHttpOptions = httpConfig => configManager
             .GetSection("Http")
             .Bind(httpConfig)); // Enable HTTP activities.
+
     elsa.UseHttp(http => http
         .ConfigureHttpOptions = httpConfig => httpConfig
             .BaseUrl = new(apiBaseUrl)); // Set HTTP base URL for api endpoints.
+
     elsa.UseHttp(http => http
         .ConfigureHttpOptions = httpConfig => httpConfig
             .BasePath = new(apiBasePath)); // Set HTTP base path for api endpoints.
+
     elsa.UseWorkflowsApi(); // Expose Elsa API endpoints.    
+
     elsa.AddActivitiesFrom<Program>(); // Register custom activities from the application, if any.
+
     elsa.AddWorkflowsFrom<Program>(); // Register custom workflows from the application, if any.
+
     elsa.UseRealTimeWorkflows(); // Setup a SignalR hub for real-time updates from the server.
 
 });
@@ -62,6 +75,7 @@ builder.Services.AddCors(cors => cors
     ); // Configure CORS to allow designer app hosted on a different origin to invoke the APIs.
 
 var isDesignTime = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")?.Contains("Design") ?? false;
+
 if (!isDesignTime && builder.Environment.IsDevelopment())
 {
     try
@@ -88,7 +102,6 @@ if (!isDesignTime && builder.Environment.IsDevelopment())
 builder.Services.AddRazorPages(options => options
     .Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute()) // Disable antiforgery token validation.
 );
-       
 
 builder.Services.AddHealthChecks();
 
@@ -124,9 +137,9 @@ app.UseCors();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseWorkflowsApi(); 
+app.UseWorkflowsApi();
 app.UseWorkflows();
 app.UseWorkflowsSignalRHubs(); // Optional SignalR integration for real-time updates. 
 app.MapFallbackToFile("/_Host");
-app.MapHealthChecks("/health"); // TODO: remove this line? (not part of original setup)
+app.MapHealthChecks("/");
 app.Run();
