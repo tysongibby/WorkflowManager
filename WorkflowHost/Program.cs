@@ -108,6 +108,8 @@ builder.Services.AddRazorPages(options => options
     .Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute()) // Disable antiforgery token validation.
 );
 
+builder.Services.AddServerSideBlazor();
+
 builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer(); // Add API Explorer for Swagger/Swashbuckle
@@ -146,6 +148,7 @@ app.UseWorkflowsApi();
 app.UseWorkflows();
 app.UseWorkflowsSignalRHubs(); // Optional SignalR integration for real-time updates. 
 app.MapRazorPages();
+app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 app.MapHealthChecks("/");
 app.Run();
