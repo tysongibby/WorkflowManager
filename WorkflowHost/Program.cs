@@ -23,7 +23,7 @@ builder.Services.AddElsa(elsa =>
         identity.UseAdminUserProvider();
     }); // Setup Identity features for authentication/authorization.
 
-    elsa.UseDefaultAuthentication(authentication => authentication
+       elsa.UseDefaultAuthentication(authentication => authentication
         .UseAdminApiKey()); // Configure ASP.NET authentication/authorization.
 
     elsa.UseWorkflowManagement(workflowManagement => 
@@ -42,6 +42,7 @@ builder.Services.AddElsa(elsa =>
     //elsa.UseLiquid(); // Enable Liquid workflow expressions    
 
     elsa.UseCSharp(); // Enable C# workflow expressions
+
 
     elsa.UseHttp(http => http
         .ConfigureHttpOptions = httpConfig => configManager
@@ -66,6 +67,7 @@ builder.Services.AddElsa(elsa =>
 
 });
 
+
 builder.Services.AddCors(cors => cors
     .AddDefaultPolicy(policy => policy
         .AllowAnyHeader()
@@ -75,6 +77,9 @@ builder.Services.AddCors(cors => cors
     ); // Configure CORS to allow designer app hosted on a different origin to invoke the APIs.
 
 var isDesignTime = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")?.Contains("Design") ?? false;
+
+// Register Elsa Studio Shell services. Disable authorization since we are using API key authentication and we don't want the designer to have to deal with authorization challenges.
+
 
 if (!isDesignTime && builder.Environment.IsDevelopment())
 {

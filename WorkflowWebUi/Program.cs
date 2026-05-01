@@ -27,6 +27,9 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.RootComponents.RegisterCustomElsaStudioElements();
 
+// Disable authorization since we are using API key authentication and we don't want the designer to have to deal with authorization challenges.
+builder.Services.AddShell(x => x.DisableAuthorization = true);
+
 // Register shell services and modules.
 var backendConfig = new BackendApiConfig
 {
@@ -41,13 +44,12 @@ builder.Services.UseElsaIdentity();
 builder.Services.AddDashboardModule();
 builder.Services.AddWorkflowsModule();
 
-
 // Build the application.
 var app = builder.Build();
 
 // Apply client config.
-var js = app.Services.GetRequiredService<IJSRuntime>();
-var clientConfig = await js.InvokeAsync<JsonElement>("getClientConfig");
+//var js = app.Services.GetRequiredService<IJSRuntime>();
+//var clientConfig = await js.InvokeAsync<JsonElement>("getClientConfig");
 var apiUrl = builder.Configuration["Backend:Url"] ?? throw new InvalidOperationException("No API URL configured.");
 app.Services.GetRequiredService<IOptions<BackendOptions>>().Value.Url = new(apiUrl);
 
