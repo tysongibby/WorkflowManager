@@ -36,10 +36,10 @@ builder.Services.AddElsa(elsa =>
 
     elsa.UseScheduling(); // Use timer activities.                             
 
-    elsa.UseJavaScript(javaScript => javaScript
-        .AllowClrAccess = true); // Enable JavaScript workflow expressions
+    //elsa.UseJavaScript(javaScript => javaScript
+    //    .AllowClrAccess = true); // Enable JavaScript workflow expressions
 
-    elsa.UseLiquid(); // Enable Liquid workflow expressions    
+    //elsa.UseLiquid(); // Enable Liquid workflow expressions    
 
     elsa.UseCSharp(); // Enable C# workflow expressions
 
@@ -140,6 +140,7 @@ app.UseAuthorization();
 app.UseWorkflowsApi();
 app.UseWorkflows();
 app.UseWorkflowsSignalRHubs(); // Optional SignalR integration for real-time updates. 
-app.MapFallbackToFile("/_Host");
+app.MapRazorPages();
+app.MapFallbackToPage("/_Host");
 app.MapHealthChecks("/");
 app.Run();
