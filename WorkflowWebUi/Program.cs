@@ -33,7 +33,7 @@ builder.Services.AddShell(x => x.DisableAuthorization = true);
 // Register shell services and modules.
 var backendConfig = new BackendApiConfig
 {
-    ConfigureBackendOptions = options => options.Url = new Uri("https://localhost:5001/elsa/api"),
+    ConfigureBackendOptions = options => options.Url = new Uri("https://localhost:44398/elsa/api"),
     ConfigureHttpClientBuilder = options => options.AuthenticationHandler = typeof(AuthenticatingApiHttpMessageHandler)
 };
 builder.Services.AddCore();

@@ -2,8 +2,10 @@ using Elsa.EntityFrameworkCore.Extensions;
 using Elsa.EntityFrameworkCore.Modules.Management;
 using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
-using Microsoft.AspNetCore.Mvc;
+using Elsa.Secrets.Persistence.EntityFrameworkCore.SqlServer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var configManager = builder.Configuration;
@@ -115,6 +117,31 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer(); // Add API Explorer for Swagger/Swashbuckle
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using var serviceScope = app.Services.CreateScope();
+    var logger = serviceScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var managementDbContext = serviceScope.ServiceProvider.GetRequiredService<Elsa.EntityFrameworkCore.Modules.Management.ManagementElsaDbContext>();
+    var runtimeDbContext = serviceScope.ServiceProvider.GetRequiredService<Elsa.EntityFrameworkCore.Modules.Runtime.RuntimeElsaDbContext>();
+
+    // Seed Workflow database with test data.
+    //var seeder = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbSeeder>();
+
+    // TODO: REMOVE DBSEEDER BEFORE DEPLOYMENT
+    try
+    {
+        // RESET AND MIGRATE APPLICATION DATABASE
+        managementDbContext.Database.Migrate();
+        runtimeDbContext.Database.Migrate();
+        // SEED APPLICATION DATABASE        
+        //await seeder.SeedDataBaseAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 app.UseCors();
 app.UseRouting(); // Required for SignalR.
