@@ -3,9 +3,11 @@ using Elsa.EntityFrameworkCore.Modules.Management;
 using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
 using Elsa.Secrets.Persistence.EntityFrameworkCore.SqlServer;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WorkflowHost.ApiKeyManager;
 
 var builder = WebApplication.CreateBuilder(args);
 var configManager = builder.Configuration;
@@ -16,16 +18,23 @@ var apiBasePath = configManager["Api:BasePath"] ?? throw new ArgumentNullExcepti
 
 builder.WebHost.UseStaticWebAssets();
 
+// Register API Key Store
+builder.Services.AddSingleton<IApiKeyStore, InMemoryApiKeyStore>();
+var apiKey = builder.Configuration["Api:Key"] ?? throw new ArgumentNullException("Api:Key in appsettings.json is null: API key cannot be null");
+// Configure API Key authentication
+builder.Services.AddAuthentication(apiKey)
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(apiKey, null);
+
 builder.Services.AddElsa(elsa =>
 {
     elsa.UseIdentity(identity =>
     {
         identity.TokenOptions = token => token
-            .SigningKey = signingKey; // TODO: Replace temp 256 bit signing key before launch.
+            .SigningKey = signingKey;
         identity.UseAdminUserProvider();
     }); // Setup Identity features for authentication/authorization.
 
-       elsa.UseDefaultAuthentication(authentication => authentication
+    elsa.UseDefaultAuthentication(authentication => authentication
         .UseAdminApiKey()); // Configure ASP.NET authentication/authorization.
 
     elsa.UseWorkflowManagement(workflowManagement => 
