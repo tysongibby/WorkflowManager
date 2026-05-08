@@ -67,6 +67,7 @@ builder.Services.AddElsa(elsa => elsa
     // Register custom activities from the application, if any.
     .AddActivitiesFrom<Program>()
     .AddActivity<Sequence>()
+    .AddActivity<WriteLine>()
     // Register custom workflows from the application, if any.
     .AddWorkflowsFrom<Program>()
     // Setup a SignalR hub for real-time updates from the server.
