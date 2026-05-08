@@ -44,6 +44,9 @@ builder.Services.UseElsaIdentity();
 builder.Services.AddDashboardModule();
 builder.Services.AddWorkflowsModule();
 
+// TODO: REMOVE TO BEFORE DEPLOYMENT AND TO ENABLE SECURITY
+builder.Services.AddShell(x => x.DisableAuthorization = true);
+
 // Build the application.
 var app = builder.Build();
 

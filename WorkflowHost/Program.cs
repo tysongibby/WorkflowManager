@@ -2,6 +2,7 @@ using Elsa.EntityFrameworkCore.Extensions;
 using Elsa.EntityFrameworkCore.Modules.Management;
 using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
+using Elsa.Identity;
 using Elsa.Secrets.Persistence.EntityFrameworkCore.SqlServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -25,59 +26,59 @@ var apiKey = builder.Configuration["Api:Key"] ?? throw new ArgumentNullException
 builder.Services.AddAuthentication(apiKey)
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(apiKey, null);
 
-builder.Services.AddElsa(elsa =>
-{
-    elsa.UseIdentity(identity =>
+builder.Services.AddElsa(elsa => elsa
+    // Setup Identity features for authentication/authorization.
+    .UseIdentity(identity =>
     {
         identity.TokenOptions = token => token
             .SigningKey = signingKey;
-        identity.UseAdminUserProvider();
-    }); // Setup Identity features for authentication/authorization.
+        //identity.UseConfigurationBasedIdentityProvider();
+    })
 
-    elsa.UseDefaultAuthentication(authentication => authentication
-        .UseAdminApiKey()); // Configure ASP.NET authentication/authorization.
-
-    elsa.UseWorkflowManagement(workflowManagement => 
+    // Configure ASP.NET authentication/authorization.
+    .UseDefaultAuthentication(authentication => authentication
+        .UseAdminApiKey())
+    // Configure Management layer to use EF Core. 
+    .UseWorkflowManagement(workflowManagement =>
         workflowManagement.UseEntityFrameworkCore(ef => ef
-            .UseSqlServer(dbConnection))); // Configure Management layer to use EF Core.    
-
-    elsa.UseWorkflowRuntime(runtime => 
+            .UseSqlServer(dbConnection)))
+    // Configure Runtime layer to use EF Core.
+    .UseWorkflowRuntime(runtime =>
         runtime.UseEntityFrameworkCore(ef => ef
-            .UseSqlServer(dbConnection))); // Configure Runtime layer to use EF Core.    
+            .UseSqlServer(dbConnection)))
+    // Use timer activities.  
+    .UseScheduling()
+    // Enable JavaScript workflow expressions
+    .UseJavaScript((Elsa.JavaScript.Features.JavaScriptFeature javascript) => { })
+    // Enable Liquid workflow expressions    
+    .UseLiquid((Elsa.Liquid.Features.LiquidFeature liquid) => { })
+    // Enable C# workflow expressions
+    .UseCSharp()
+    // Enable HTTP activities.
+    .UseHttp(http => http
+    .ConfigureHttpOptions = httpConfig => configManager
+        .GetSection("Http")
+        .Bind(httpConfig))
+    // Set HTTP base URL for api endpoints.
+    .UseHttp(http => http
+    .ConfigureHttpOptions = httpConfig => httpConfig
+        .BaseUrl = new(apiBaseUrl))
+    // Set HTTP base path for api endpoints.
+    .UseHttp(http => http
+    .ConfigureHttpOptions = httpConfig => httpConfig
+        .BasePath = new(apiBasePath))
+    // Expose Elsa API endpoints.  
+    .UseWorkflowsApi()
+    // Register custom activities from the application, if any.
+    .AddActivitiesFrom<Program>()
+    // Register custom workflows from the application, if any.
+    .AddWorkflowsFrom<Program>()
+    // Setup a SignalR hub for real-time updates from the server.
+    .UseRealTimeWorkflows()
+);
 
-    elsa.UseScheduling(); // Use timer activities.                             
-
-    //elsa.UseJavaScript(javaScript => javaScript
-    //    .AllowClrAccess = true); // Enable JavaScript workflow expressions
-
-    //elsa.UseLiquid(); // Enable Liquid workflow expressions    
-
-    elsa.UseCSharp(); // Enable C# workflow expressions
-
-
-    elsa.UseHttp(http => http
-        .ConfigureHttpOptions = httpConfig => configManager
-            .GetSection("Http")
-            .Bind(httpConfig)); // Enable HTTP activities.
-
-    elsa.UseHttp(http => http
-        .ConfigureHttpOptions = httpConfig => httpConfig
-            .BaseUrl = new(apiBaseUrl)); // Set HTTP base URL for api endpoints.
-
-    elsa.UseHttp(http => http
-        .ConfigureHttpOptions = httpConfig => httpConfig
-            .BasePath = new(apiBasePath)); // Set HTTP base path for api endpoints.
-
-    elsa.UseWorkflowsApi(); // Expose Elsa API endpoints.    
-
-    elsa.AddActivitiesFrom<Program>(); // Register custom activities from the application, if any.
-
-    elsa.AddWorkflowsFrom<Program>(); // Register custom workflows from the application, if any.
-
-    elsa.UseRealTimeWorkflows(); // Setup a SignalR hub for real-time updates from the server.
-
-});
-
+// TODO: REMOVE TO BEFORE DEPLOYMENT AND TO ENABLE SECURITY
+Elsa.EndpointSecurityOptions.DisableSecurity();
 
 builder.Services.AddCors(cors => cors
     .AddDefaultPolicy(policy => policy
