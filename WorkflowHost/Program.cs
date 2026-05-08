@@ -4,6 +4,7 @@ using Elsa.EntityFrameworkCore.Modules.Runtime;
 using Elsa.Extensions;
 using Elsa.Identity;
 using Elsa.Secrets.Persistence.EntityFrameworkCore.SqlServer;
+using Elsa.Workflows.Activities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
@@ -56,21 +57,16 @@ builder.Services.AddElsa(elsa => elsa
     .UseCSharp()
     // Enable HTTP activities.
     .UseHttp(http => http
-    .ConfigureHttpOptions = httpConfig => configManager
-        .GetSection("Http")
-        .Bind(httpConfig))
-    // Set HTTP base URL for api endpoints.
-    .UseHttp(http => http
-    .ConfigureHttpOptions = httpConfig => httpConfig
-        .BaseUrl = new(apiBaseUrl))
-    // Set HTTP base path for api endpoints.
-    .UseHttp(http => http
-    .ConfigureHttpOptions = httpConfig => httpConfig
-        .BasePath = new(apiBasePath))
+        .ConfigureHttpOptions = httpConfig => {
+            configManager.GetSection("Http").Bind(httpConfig);
+            httpConfig.BaseUrl = new(apiBaseUrl);
+            httpConfig.BasePath = new(apiBasePath);
+        })
     // Expose Elsa API endpoints.  
     .UseWorkflowsApi()
     // Register custom activities from the application, if any.
     .AddActivitiesFrom<Program>()
+    .AddActivity<Sequence>()
     // Register custom workflows from the application, if any.
     .AddWorkflowsFrom<Program>()
     // Setup a SignalR hub for real-time updates from the server.
